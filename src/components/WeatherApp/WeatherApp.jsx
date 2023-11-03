@@ -1,5 +1,5 @@
 import React from 'react'
-import { useState } from 'react'
+import { useState , useEffect} from 'react'
 import './WeatherApp.css'
 import search_icon from '../Assets/search.png'
 import clear_icon from '../Assets/clear.png'
@@ -18,7 +18,7 @@ export const WeatherApp = () => {
   let [wind,setWind]=useState(18);
   let [temp,setTemp]=useState(24);
   let [location,setLocation]=useState("London");
-
+  const [loading, setLoading] = useState(true);
   const [wicon,setWicon] = useState(cloud_icon);
 
   const search = async () => {
@@ -59,6 +59,66 @@ export const WeatherApp = () => {
       }
   }
 
+  const fetchWeatherByLocation = async (latitude, longitude) => {
+    let url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=Metric&appid=${API_KEY}`;
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      console.log(data);
+
+      setHumidity(data.main.humidity);
+      setWind(Math.floor(data.wind.speed));
+      setTemp(Math.floor(data.main.temp));
+      setLocation(data.name);
+
+      // Your existing icon logic...
+      if(data.weather[0].icon==="01d" || data.weather[0].icon==="01n"){
+        setWicon(clear_icon);
+      } else if(data.weather[0].icon==="02d" || data.weather[0].icon==="02n"){
+        setWicon(cloud_icon);
+      } else if(data.weather[0].icon==="03d" || data.weather[0].icon==="03n"){
+        setWicon(drizzle_icon);
+      } else if(data.weather[0].icon==="04d" || data.weather[0].icon==="04n"){
+        setWicon(drizzle_icon);
+      } else if(data.weather[0].icon==="09d" || data.weather[0].icon==="09n"){
+        setWicon(rain_icon);
+      } else if(data.weather[0].icon==="10d" || data.weather[0].icon==="10n"){
+        setWicon(rain_icon);
+      } else if(data.weather[0].icon==="13d" || data.weather[0].icon==="13n"){
+        setWicon(snow_icon);
+      }
+      else {
+        setWicon(clear_icon);
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching weather by location", error);
+      setLoading(false);
+    }
+  };
+
+  const updateWeatherByLocation = () => {
+    setLoading(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        const { latitude, longitude } = position.coords;
+        fetchWeatherByLocation(latitude, longitude);
+      }, (error) => {
+        console.error("Error getting geolocation data", error);
+        setLoading(false);
+      });
+    } else {
+      console.log("Geolocation is not supported by this browser.");
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    updateWeatherByLocation(); // Fetch weather based on user's location when component mounts
+  }, []);
+
 
   return (
     <div className='container'>
@@ -67,6 +127,7 @@ export const WeatherApp = () => {
         <div className='search-icon' onClick={search}>
           <img src={search_icon} alt="" />
         </div>
+        <button className="loc-button" onClick={updateWeatherByLocation}>LOC</button>
       </div>
       <div className="weather-image">
         <img src={wicon} alt="" />

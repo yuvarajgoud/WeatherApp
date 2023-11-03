@@ -88,5 +88,14 @@
   margin-top: 20px;
 }
 
+.loc-button {
+  width: 78px;
+  height: 60px;
+  background: #ebfffc;
+  border-radius: 60px;
+  cursor :pointer;
+  color: gray;
+}
+
 
 
